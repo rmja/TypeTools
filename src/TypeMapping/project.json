@@ -1,0 +1,11 @@
+{
+	"version": "1.0.0-*",
+	"dependencies": {
+    "Microsoft.Framework.DependencyInjection.Abstractions": "1.0.0-beta8",
+    "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-beta8",
+		"AutoMapper": "4.0.0-*"
+	},
+    "frameworks" : {
+        "dnx451" : { }
+    }
+}
