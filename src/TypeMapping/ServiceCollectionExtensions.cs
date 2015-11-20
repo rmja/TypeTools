@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
-using Microsoft.Dnx.Runtime;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.PlatformAbstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TypeMapping;
 
-namespace Microsoft.Framework.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {

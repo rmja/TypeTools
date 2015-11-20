@@ -1,16 +1,9 @@
 ﻿{
   "version": "1.0.0-*",
-  "description": "",
-  "authors": [ "" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-
   "dependencies": {
     "TypeMapping": "",
-    "Newtonsoft.Json": "6.0.8"
+    "Newtonsoft.Json": "7.0.1"
   },
-
   "frameworks": {
     "dnx451": {
       "frameworkAssemblies": {
