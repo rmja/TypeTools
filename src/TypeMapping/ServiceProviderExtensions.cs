@@ -26,6 +26,7 @@ namespace System
                     configurator.Configure(config);
                 }
             });
+            Mapper.Configuration.AllowNullCollections = true;
 
             Mapper.AssertConfigurationIsValid();
 

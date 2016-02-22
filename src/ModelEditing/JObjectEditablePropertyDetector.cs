@@ -18,6 +18,11 @@ namespace ModelEditing
             _mapper = mapper;
         }
 
+        public bool CanHandleFragmentType(Type type)
+        {
+            return type == typeof(JObject);
+        }
+
         public IEnumerable<string> GetNamesOfProperties<T>(object fragment)
         {
             var propertyInfos = typeof(T).GetProperties();
@@ -38,10 +43,9 @@ namespace ModelEditing
         public Dictionary<string, object> GetPropertyValueMap<TFragment, TTarget>(object dtoFragment)
         {
             var namesOfModifiedDtoProperties = GetNamesOfProperties<TFragment>(dtoFragment).ToList();
-            TTarget entity = _mapper.Map<TTarget>(((JObject)dtoFragment).ToObject<TFragment>());
+            TTarget entity = _mapper.MapTo<TTarget>(((JObject)dtoFragment).ToObject<TFragment>());
             var entityPropertyInfos = typeof(TTarget).GetProperties();
             var map = new Dictionary<string, object>();
-
 
             foreach (string dtoPropertyName in namesOfModifiedDtoProperties)
             {

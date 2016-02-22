@@ -8,22 +8,33 @@ namespace ModelEditing
 {
     public class PropertyUpdater : IPropertyUpdater
     {
-        private readonly IEditablePropertyDetector _editablePropertyDetector;
+        private IEnumerable<IEditablePropertyDetector> _editablePropertyDetectors;
 
-        public PropertyUpdater(IEditablePropertyDetector editablePropertyDetector)
+        public PropertyUpdater(IEnumerable<IEditablePropertyDetector> editablePropertyDetectors)
         {
-            _editablePropertyDetector = editablePropertyDetector;
+            _editablePropertyDetectors = editablePropertyDetectors;
         }
 
         public void UpdateProperties<TFragment, TTarget>(TTarget target, object fragment)
         {
-            var updatedPropertyValueMap = _editablePropertyDetector.GetPropertyValueMap<TFragment, TTarget>(fragment);
+            var editablePropertyDetector = GetDetector(fragment.GetType());
+
+            var updatedPropertyValueMap = editablePropertyDetector.GetPropertyValueMap<TFragment, TTarget>(fragment);
 
             var propertyInfos = typeof(TTarget).GetProperties();
             foreach (var pair in updatedPropertyValueMap)
             {
-                propertyInfos.Single(x => x.Name == pair.Key).SetValue(target, pair.Value);
+                var propertyInfo = propertyInfos.Single(x => x.Name == pair.Key);
+                if (propertyInfo.GetSetMethod() != null)
+                {
+                    propertyInfo.SetValue(target, pair.Value);
+                }
             }
+        }
+
+        public IEditablePropertyDetector GetDetector(Type fragmentType)
+        {
+            return _editablePropertyDetectors.First(x => x.CanHandleFragmentType(fragmentType));
         }
     }
 }
