@@ -18,16 +18,19 @@ namespace ModelEditing
             _mapper = mapper;
         }
 
-        public bool CanHandleFragmentType(Type type)
-        {
-            return type == typeof(JObject);
-        }
-
-        public IEnumerable<string> GetNamesOfProperties<T>(object fragment)
+        public IEnumerable<string> GetNamesOfProperties<T>(object fragment, bool allowRequired)
         {
             var propertyInfos = typeof(T).GetProperties();
             var modifiablePropertyInfos = propertyInfos.Where(x =>
             {
+                if (allowRequired)
+                {
+                    if (x.GetCustomAttributes(typeof(RequiredAttribute), false).Any())
+                    {
+                        return true;
+                    }
+                }
+
                 var editableAttribute = x.GetCustomAttributes(typeof(EditableAttribute), false).FirstOrDefault() as EditableAttribute;
 
                 return editableAttribute != null && editableAttribute.AllowEdit;
@@ -40,21 +43,28 @@ namespace ModelEditing
             return namesOfEditableProperties;
         }
 
-        public Dictionary<string, object> GetPropertyValueMap<TFragment, TTarget>(object dtoFragment)
+        public Dictionary<string, object> GetPropertyValueMap<TFragment, TTarget>(object fragment, bool allowRequired)
         {
-            var namesOfModifiedDtoProperties = GetNamesOfProperties<TFragment>(dtoFragment).ToList();
-            TTarget entity = _mapper.MapTo<TTarget>(((JObject)dtoFragment).ToObject<TFragment>());
+            var namesOfModifiedFragmentProperties = GetNamesOfProperties<TFragment>(fragment, allowRequired).ToList();
             var entityPropertyInfos = typeof(TTarget).GetProperties();
+            var fragmentJProperties = ((JObject)fragment).Properties().ToDictionary(x => x.Name, x => x);
             var map = new Dictionary<string, object>();
 
-            foreach (string dtoPropertyName in namesOfModifiedDtoProperties)
+            foreach (var entityPropertyInfo in entityPropertyInfos)
             {
-                string entityPropertyName = _mapper.GetDestinationPropertyName(typeof(TFragment), typeof(TTarget), dtoPropertyName);
+                string fragmentPropertyName = _mapper.GetDestinationPropertyName(typeof(TTarget), typeof(TFragment), entityPropertyInfo.Name);
 
-                var value = entityPropertyInfos.Single(x => x.Name == entityPropertyName).GetValue(entity);
-                map.Add(entityPropertyName, value);
+                if (fragmentPropertyName != null)
+                {
+                    if (namesOfModifiedFragmentProperties.Contains(fragmentPropertyName))
+                    {
+                        var fragmentJProperty = fragmentJProperties[fragmentPropertyName];
+                        var value = ((JValue)fragmentJProperty.Value).Value;
+                        map.Add(entityPropertyInfo.Name, value);
+                    }
+                }
             }
-
+            
             return map;
         }
     }

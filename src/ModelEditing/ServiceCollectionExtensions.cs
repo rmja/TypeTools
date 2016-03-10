@@ -11,7 +11,6 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddModelEditing(this IServiceCollection services)
         {
             services.AddSingleton<IEditablePropertyDetector, JObjectEditablePropertyDetector>();
-            services.AddSingleton<IEditablePropertyDetector, FragmentTypeEditablePropertyDetector>();
             services.AddSingleton<IPropertyUpdater, PropertyUpdater>();
 
             return services;
