@@ -6,7 +6,7 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DNX\Microsoft.DNX.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>088a1420-3bee-40f7-8e8e-ff3ebef8fa51</ProjectGuid>
+    <ProjectGuid>6689ddea-34ae-4b35-92fe-6553126137e7</ProjectGuid>
     <RootNamespace>ModelEditing</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">..\..\..\Cloudspool\artifacts\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">..\..\..\Cloudspool\artifacts\bin\$(MSBuildProjectName)\</OutputPath>

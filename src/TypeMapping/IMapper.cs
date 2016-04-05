@@ -4,9 +4,16 @@ namespace TypeMapping
 {
     public interface IMapper
     {
-		TDestination MapTo<TDestination>(object source, object sideInformation = null);
         IMapBuilder Map(object source, object sideInformation = null);
         string GetDestinationPropertyName(Type sourceType, Type destinationType, string sourcePropertyName);
+    }
+
+    public static class IMapperExtensions
+    {
+        public static TDestination MapTo<TDestination>(this IMapper mapper, object source, object sideInformation = null)
+        {
+            return mapper.Map(source, sideInformation).To<TDestination>();
+        }
     }
 
     public interface IMapBuilder

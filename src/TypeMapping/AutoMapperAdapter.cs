@@ -8,21 +8,36 @@ namespace TypeMapping
 {
 	public class AutoMapperAdapter : IMapper
 	{
-        public TDestination MapTo<TDestination>(object source, object sideInformation = null)
+        private readonly AutoMapper.IMapper _automapper;
+
+        public AutoMapperAdapter(IServiceProvider services, IEnumerable<IAutoMapperConfigurator> configurators)
         {
-            return Map(source, sideInformation).To<TDestination>();
+            var automapperConfiguration = new MapperConfiguration(configure =>
+            {
+                configure.ConstructServicesUsing(type => services.GetService(type));
+                configure.AllowNullCollections = true;
+
+                foreach (var configurator in configurators)
+                {
+                    configurator.Configure(configure);
+                }
+            });
+
+            automapperConfiguration.AssertConfigurationIsValid();
+
+            _automapper = automapperConfiguration.CreateMapper();
         }
 
         public IMapBuilder Map(object source, object sideInformation = null)
         {
-            return new MapBuilder(source, sideInformation);
+            return new MapBuilder(_automapper, source, sideInformation);
         }
 
         public string GetDestinationPropertyName(Type sourceType, Type destinationType, string sourcePropertyName)
         {
             if (sourceType != destinationType)
             {
-                var typeMap = Mapper.GetAllTypeMaps().Single(x => x.SourceType == sourceType && x.DestinationType == destinationType);
+                var typeMap = _automapper.ConfigurationProvider.GetAllTypeMaps().Single(x => x.SourceType == sourceType && x.DestinationType == destinationType);
                 var propertyMaps = typeMap.GetPropertyMaps();
                 var propertyMap = propertyMaps.SingleOrDefault(x => x.SourceMember != null && x.SourceMember.Name == sourcePropertyName);
 
@@ -37,10 +52,12 @@ namespace TypeMapping
 
     public class MapBuilder : IMapBuilder
     {
+        private readonly AutoMapper.IMapper _automapper;
         private readonly List<Tuple<object, object>> _sources = new List<Tuple<object, object>>();
 
-        public MapBuilder(object source, object sideInformation)
+        public MapBuilder(AutoMapper.IMapper automapper, object source, object sideInformation)
         {
+            _automapper = automapper;
             _sources.Add(Tuple.Create(source, sideInformation));
         }
 
@@ -77,14 +94,14 @@ namespace TypeMapping
                 };
 
                 return destination != null
-                ? (TDestination)Mapper.Map(source, destination, source.GetType(), typeof(TDestination), setOptions)
-                : Mapper.Map<TDestination>(source, setOptions);
+                ? (TDestination)_automapper.Map(source, destination, source.GetType(), typeof(TDestination), setOptions)
+                : _automapper.Map<TDestination>(source, setOptions);
             }
             else
             {
                 return destination != null
-                    ? (TDestination)Mapper.Map(source, destination, source.GetType(), typeof(TDestination))
-                    : Mapper.Map<TDestination>(source);
+                    ? (TDestination)_automapper.Map(source, destination, source.GetType(), typeof(TDestination))
+                    : _automapper.Map<TDestination>(source);
             }
         }
     }

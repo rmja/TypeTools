@@ -1,43 +1,26 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.PlatformAbstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using TypeMapping;
+﻿using TypeMapping;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        private static readonly string _libraryName = "TypeMapping";
-
-		public static IServiceCollection AddTypeMapping(this IServiceCollection services, ILibraryManager libraryManager)
+		public static IServiceCollection AddTypeMapping(this IServiceCollection services)
 		{
-			services.AddSingleton<IMapper, AutoMapperAdapter>();
-            services.AddSingleton<IAutoMapperConfiguratorProvider, DefaultAutoMapperConfiguratorProvider>();
+            services.AddSingleton<IMapper, AutoMapperAdapter>();
 
-            var libraries = libraryManager.GetReferencingLibraries(_libraryName)
-                .Distinct()
-                .Where(x => x.Name != _libraryName);
-
-            foreach (var library in libraries)
+            var typeProvider = new AutoMapperConfiguratorTypeProvider();
+            foreach (var typeInfo in typeProvider.AutoMapperConfiguratorTypes)
             {
-                foreach (var assemblyName in library.Assemblies)
-                {
-                    var assembly = Assembly.Load(assemblyName);
-
-                    foreach (var type in assembly.DefinedTypes)
-                    {
-                        if (typeof(IValueResolver).GetTypeInfo().IsAssignableFrom(type) && type.IsClass)
-                        {
-                            services.AddSingleton(type.AsType());
-                        }
-                    }
-                }
+                services.AddSingleton(typeof(IAutoMapperConfigurator), typeInfo.AsType());
             }
-            
+            foreach (var typeInfo in typeProvider.ValueResolverTypes)
+            {
+                services.AddSingleton(typeInfo.AsType());
+            }
+            foreach (var typeInfo in typeProvider.TypeConverterTypes)
+            {
+                services.AddSingleton(typeInfo.AsType());
+            }
 
             return services;
 		}
