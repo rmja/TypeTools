@@ -2,10 +2,10 @@
   "version": "1.0.0-*",
   "dependencies": {
     "TypeMapping": "",
-    "Newtonsoft.Json": "7.0.1"
+    "Newtonsoft.Json": "8.0.3"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "frameworkAssemblies": {
         "System.ComponentModel.DataAnnotations": "4.0.0.0"
       }

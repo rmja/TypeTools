@@ -4,6 +4,6 @@ namespace TypeMapping
 {
     public interface IAutoMapperConfigurator
     {
-		void Configure(IConfiguration configuration);
+		void Configure(IMapperConfiguration configuration);
     }
 }

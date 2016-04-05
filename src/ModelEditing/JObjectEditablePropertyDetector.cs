@@ -47,7 +47,7 @@ namespace ModelEditing
         {
             var namesOfModifiedFragmentProperties = GetNamesOfProperties<TFragment>(fragment, allowRequired).ToList();
             var entityPropertyInfos = typeof(TTarget).GetProperties();
-            var fragmentJProperties = ((JObject)fragment).Properties().ToDictionary(x => x.Name, x => x);
+            var fragmentJProperties = ((JObject)fragment).Properties().ToDictionary(x => x.Name.ToLowerInvariant(), x => x);
             var map = new Dictionary<string, object>();
 
             foreach (var entityPropertyInfo in entityPropertyInfos)
@@ -58,7 +58,7 @@ namespace ModelEditing
                 {
                     if (namesOfModifiedFragmentProperties.Contains(fragmentPropertyName))
                     {
-                        var fragmentJProperty = fragmentJProperties[fragmentPropertyName];
+                        var fragmentJProperty = fragmentJProperties[fragmentPropertyName.ToLowerInvariant()];
                         var value = ((JValue)fragmentJProperty.Value).Value;
                         map.Add(entityPropertyInfo.Name, value);
                     }

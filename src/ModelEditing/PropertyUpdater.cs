@@ -71,9 +71,22 @@ namespace ModelEditing
                 var propertyInfo = propertyInfos.Single(x => x.Name == pair.Key);
                 if (propertyInfo.GetSetMethod() != null)
                 {
-                    propertyInfo.SetValue(target, pair.Value);
+                    var targetType = propertyInfo.PropertyType.GetTypeInfo().IsNullableType()
+                         ? Nullable.GetUnderlyingType(propertyInfo.PropertyType)
+                         : propertyInfo.PropertyType;
+                    var convertedValue = pair.Value == null ? null : Convert.ChangeType(pair.Value, targetType);
+
+                    propertyInfo.SetValue(target, convertedValue);
                 }
             }
+        }
+    }
+
+    public static class TypeExtensions
+    {
+        public static bool IsNullableType(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
     }
 }
