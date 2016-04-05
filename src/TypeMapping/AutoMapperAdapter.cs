@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,19 +8,14 @@ namespace TypeMapping
 {
 	public class AutoMapperAdapter : IMapper
 	{
-        public TDestination Map<TSource, TDestination>(TSource source)
+        public TDestination MapTo<TDestination>(object source, object sideInformation = null)
         {
-            return MapTo<TDestination>(source);
+            return Map(source, sideInformation).To<TDestination>();
         }
 
-        public TDestination MapTo<TDestination>(object source)
+        public IMapBuilder Map(object source, object sideInformation = null)
         {
-            return Map(source).To<TDestination>();
-        }
-
-        public IMapBuilder Map(object source)
-        {
-            return new MapBuilder(source);
+            return new MapBuilder(source, sideInformation);
         }
 
         public string GetDestinationPropertyName(Type sourceType, Type destinationType, string sourcePropertyName)
@@ -41,34 +37,55 @@ namespace TypeMapping
 
     public class MapBuilder : IMapBuilder
     {
-        private readonly List<object> _sources = new List<object>();
+        private readonly List<Tuple<object, object>> _sources = new List<Tuple<object, object>>();
 
-        public MapBuilder(object source)
+        public MapBuilder(object source, object sideInformation)
         {
-            _sources.Add(source);
+            _sources.Add(Tuple.Create(source, sideInformation));
         }
 
-        public IMapBuilder AndMap(object source)
+        public IMapBuilder AndMap(object source, object sideInformation = null)
         {
-            _sources.Add(source);
+            _sources.Add(Tuple.Create(source, sideInformation));
             return this;
         }
 
         public TDestination To<TDestination>()
         {
-            return _sources.Aggregate(default(TDestination), (dest, src) => Map(src, dest));
+            return _sources.Aggregate(default(TDestination), (dest, src) => Map(src.Item1, src.Item2, dest));
         }
 
         public void To<TDestination>(TDestination destination)
         {
-            _sources.ForEach(src => Map(src, destination));
+            _sources.ForEach(src => Map(src.Item1, src.Item2, destination));
         }
 
-        private TDestination Map<TDestination>(object source, TDestination destination)
+        private TDestination Map<TDestination>(object source, object sideInformation, TDestination destination)
         {
-            return destination != null
-                ? (TDestination)Mapper.Map(source, destination, source.GetType(), typeof(TDestination))
-                : Mapper.Map<TDestination>(source);
+            if (sideInformation != null)
+            {
+                var type = sideInformation.GetType();
+                var properties = type.GetProperties();
+                var pairs = properties.ToDictionary(x => x.Name, x => x.GetValue(sideInformation, null));
+
+                Action<IMappingOperationOptions> setOptions = (IMappingOperationOptions opts) =>
+                {
+                    foreach (var pair in pairs)
+                    {
+                        opts.Items[pair.Key] = pair.Value;
+                    }
+                };
+
+                return destination != null
+                ? (TDestination)Mapper.Map(source, destination, source.GetType(), typeof(TDestination), setOptions)
+                : Mapper.Map<TDestination>(source, setOptions);
+            }
+            else
+            {
+                return destination != null
+                    ? (TDestination)Mapper.Map(source, destination, source.GetType(), typeof(TDestination))
+                    : Mapper.Map<TDestination>(source);
+            }
         }
     }
 }
